@@ -1,0 +1,143 @@
+// Starter spec, read from the code and traces by portal (no AI).
+// It says what exists. Add what the code can't: domains, your names,
+// rules, and what you plan to build.
+// Conventions: https://portal.haris-d21.workers.dev/skills/portal-architecture/SKILL.md
+model {
+  system = domain 'wild-workouts-go-ddd-example' {
+    service = service 'service' {  // terraform/service/service.tf:18
+      technology 'Cloud Run'
+      metadata {
+        resource 'service'
+      }
+    }
+    web = service 'web' {  // docker-compose.yml:3
+      technology 'JavaScript'
+      metadata {
+        code 'web/**'
+        otel_service 'web'
+        resource 'web'
+      }
+    }
+    trainer_http = service 'trainer-http' {  // docker-compose.yml:14
+      technology 'built from a Dockerfile'
+      metadata {
+        otel_service 'trainer-http'
+        resource 'trainer-http'
+      }
+    }
+    trainer_grpc = service 'trainer-grpc' {  // docker-compose.yml:34
+      technology 'built from a Dockerfile'
+      metadata {
+        otel_service 'trainer-grpc'
+        resource 'trainer-grpc'
+      }
+    }
+    trainings_http = service 'trainings-http' {  // docker-compose.yml:54
+      technology 'built from a Dockerfile'
+      metadata {
+        otel_service 'trainings-http'
+        resource 'trainings-http'
+      }
+    }
+    users_http = service 'users-http' {  // docker-compose.yml:73
+      technology 'built from a Dockerfile'
+      metadata {
+        otel_service 'users-http'
+        resource 'users-http'
+      }
+    }
+    users_grpc = service 'users-grpc' {  // docker-compose.yml:93
+      technology 'built from a Dockerfile'
+      metadata {
+        otel_service 'users-grpc'
+        resource 'users-grpc'
+      }
+    }
+    firestore = datastore 'firestore' {  // docker-compose.yml:113
+      technology 'built from a Dockerfile'
+      metadata {
+        resource 'firestore'
+      }
+    }
+    mysql = datastore 'mysql' {  // docker-compose.yml:132
+      technology 'mariadb:10'
+      metadata {
+        resource 'mysql'
+      }
+    }
+    trainer = service 'trainer' {  // internal/trainer/go.mod:1
+      technology 'Go · chi · gRPC'
+      metadata {
+        code 'internal/trainer/**'
+        otel_service 'trainer'
+        resource 'trainer'
+      }
+      common = component 'common' {
+        metadata {
+          code 'internal/common/**'
+        }
+      }
+    }
+    Firestore = datastore 'Firestore' {  // internal/trainer/go.mod:6
+      technology 'Firestore'
+      metadata {
+        resource 'Firestore'
+      }
+    }
+    trainings = service 'trainings' {  // internal/trainings/go.mod:1
+      technology 'Go · chi'
+      metadata {
+        code 'internal/trainings/**'
+        otel_service 'trainings'
+        resource 'trainings'
+      }
+    }
+    users = service 'users' {  // internal/users/go.mod:1
+      technology 'Go · chi'
+      metadata {
+        code 'internal/users/**'
+        otel_service 'users'
+        resource 'users'
+      }
+    }
+  }
+
+  trainer_http -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
+  trainer_http -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
+  trainer_http -[request]-> users_grpc  // env.USERS_GRPC_ADDR
+  trainer_grpc -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
+  trainer_grpc -[request]-> users_grpc  // env.USERS_GRPC_ADDR
+  trainings_http -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
+  trainings_http -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
+  trainings_http -[request]-> users_grpc  // env.USERS_GRPC_ADDR
+  users_http -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
+  users_http -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
+  users_http -[request]-> users_grpc  // env.USERS_GRPC_ADDR
+  users_grpc -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
+  users_grpc -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
+  firestore -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
+  firestore -[request]-> users_grpc  // env.USERS_GRPC_ADDR
+  mysql -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
+  mysql -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
+  mysql -[request]-> users_grpc  // env.USERS_GRPC_ADDR
+  trainer -> Firestore  // reads or writes? say which: -[reads]-> or -[writes]->
+  trainer -> mysql  // reads or writes? say which: -[reads]-> or -[writes]->
+  trainings -> Firestore  // reads or writes? say which: -[reads]-> or -[writes]->
+  users -> Firestore  // reads or writes? say which: -[reads]-> or -[writes]->
+  common -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
+  common -[request]-> users_grpc  // env.USERS_GRPC_ADDR
+}
+
+specification {
+  element domain
+  element service
+  element event
+  element datastore
+  element infra
+  element component
+  relationship request
+  relationship publishes
+  relationship consumes
+  relationship reads
+  relationship writes
+}
