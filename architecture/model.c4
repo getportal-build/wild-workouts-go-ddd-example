@@ -4,12 +4,6 @@
 // Conventions: https://portal.haris-d21.workers.dev/skills/portal-architecture/SKILL.md
 model {
   system = domain 'wild-workouts-go-ddd-example' {
-    default = datastore '(default)' {  // terraform/firestore.tf:1
-      technology 'Firestore'
-      metadata {
-        resource '(default)'
-      }
-    }
     service = service 'service' {  // terraform/service/service.tf:14
       technology 'Cloud Run'
       metadata {
@@ -69,18 +63,10 @@ model {
         resource 'users-grpc'
       }
     }
-    firestore = service 'firestore' {  // docker-compose.yml:113
-      technology 'built from a Dockerfile'
+    firestore = datastore 'firestore' {  // docker-compose.yml:113
+      technology 'built from a Dockerfile, or Firestore'
       metadata {
-        otel_service 'firestore'
         resource 'firestore'
-      }
-    }
-    firestore_component_tests = service 'firestore-component-tests' {  // docker-compose.yml:123
-      technology 'built from a Dockerfile'
-      metadata {
-        otel_service 'firestore-component-tests'
-        resource 'firestore-component-tests'
       }
     }
     mysql = datastore 'mysql' {  // docker-compose.yml:132
@@ -137,12 +123,6 @@ model {
         }
       }
     }
-    Firestore = datastore 'Firestore' {  // internal/trainer/go.mod:6
-      technology 'Firestore'
-      metadata {
-        resource 'Firestore'
-      }
-    }
     trainings = service 'trainings' {  // internal/trainings/go.mod:1
       technology 'Go · chi'
       metadata {
@@ -196,25 +176,22 @@ model {
     }
   }
 
-  trainer_http -[request]-> firestore  // env.FIRESTORE_EMULATOR_HOST
+  trainer_http -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
   trainer_http -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
   trainer_http -[request]-> users_grpc  // env.USERS_GRPC_ADDR
-  trainer_grpc -[request]-> firestore  // env.FIRESTORE_EMULATOR_HOST
+  trainer_grpc -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
   trainer_grpc -[request]-> users_grpc  // env.USERS_GRPC_ADDR
-  trainings_http -[request]-> firestore  // env.FIRESTORE_EMULATOR_HOST
+  trainings_http -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
   trainings_http -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
   trainings_http -[request]-> users_grpc  // env.USERS_GRPC_ADDR
-  users_http -[request]-> firestore  // env.FIRESTORE_EMULATOR_HOST
+  users_http -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
   users_http -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
   users_http -[request]-> users_grpc  // env.USERS_GRPC_ADDR
-  users_grpc -[request]-> firestore  // env.FIRESTORE_EMULATOR_HOST
+  users_grpc -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
   users_grpc -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
   firestore -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
   firestore -[request]-> users_grpc  // env.USERS_GRPC_ADDR
-  firestore_component_tests -[request]-> firestore  // env.FIRESTORE_EMULATOR_HOST
-  firestore_component_tests -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
-  firestore_component_tests -[request]-> users_grpc  // env.USERS_GRPC_ADDR
-  mysql -[request]-> firestore  // env.FIRESTORE_EMULATOR_HOST
+  mysql -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
   mysql -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
   mysql -[request]-> users_grpc  // env.USERS_GRPC_ADDR
   adapters -> query
@@ -231,7 +208,7 @@ model {
   service_2 -> command
   service_2 -> query
   service_2 -> domain
-  trainer -> Firestore  // reads or writes? say which: -[reads]-> or -[writes]->
+  trainer -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
   trainer -> mysql  // reads or writes? say which: -[reads]-> or -[writes]->
   adapters_2 -> query_2
   adapters_2 -> domain_2
@@ -246,8 +223,8 @@ model {
   service_3 -> app_2
   service_3 -> command_2
   service_3 -> query_2
-  trainings -> Firestore  // reads or writes? say which: -[reads]-> or -[writes]->
-  users -> Firestore  // reads or writes? say which: -[reads]-> or -[writes]->
+  trainings -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
+  users -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
   src -> repositories
   repositories -> src
 }
