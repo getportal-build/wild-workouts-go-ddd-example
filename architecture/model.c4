@@ -17,16 +17,6 @@ model {
         otel_service 'web'
         resource 'web'
       }
-      src = component 'src' {
-        metadata {
-          code 'web/src/*'
-        }
-      }
-      repositories = component 'repositories' {
-        metadata {
-          code 'web/src/repositories/**'
-        }
-      }
     }
     trainer_http = service 'trainer-http' {  // docker-compose.yml:14
       technology 'built from a Dockerfile'
@@ -82,41 +72,6 @@ model {
         otel_service 'trainer'
         resource 'trainer'
       }
-      adapters = component 'adapters' {
-        metadata {
-          code 'internal/trainer/adapters/**'
-        }
-      }
-      app = component 'app' {
-        metadata {
-          code 'internal/trainer/app/*'
-        }
-      }
-      command = component 'command' {
-        metadata {
-          code 'internal/trainer/app/command/**'
-        }
-      }
-      query = component 'query' {
-        metadata {
-          code 'internal/trainer/app/query/**'
-        }
-      }
-      domain = component 'domain' {
-        metadata {
-          code 'internal/trainer/domain/**'
-        }
-      }
-      ports = component 'ports' {
-        metadata {
-          code 'internal/trainer/ports/**'
-        }
-      }
-      service_2 = component 'service' {
-        metadata {
-          code 'internal/trainer/service/**'
-        }
-      }
       common = component 'common' {
         metadata {
           code 'internal/common/**'
@@ -129,41 +84,6 @@ model {
         code 'internal/trainings/**'
         otel_service 'trainings'
         resource 'trainings'
-      }
-      adapters_2 = component 'adapters' {
-        metadata {
-          code 'internal/trainings/adapters/**'
-        }
-      }
-      app_2 = component 'app' {
-        metadata {
-          code 'internal/trainings/app/*'
-        }
-      }
-      command_2 = component 'command' {
-        metadata {
-          code 'internal/trainings/app/command/**'
-        }
-      }
-      query_2 = component 'query' {
-        metadata {
-          code 'internal/trainings/app/query/**'
-        }
-      }
-      domain_2 = component 'domain' {
-        metadata {
-          code 'internal/trainings/domain/**'
-        }
-      }
-      ports_2 = component 'ports' {
-        metadata {
-          code 'internal/trainings/ports/**'
-        }
-      }
-      service_3 = component 'service' {
-        metadata {
-          code 'internal/trainings/service/**'
-        }
       }
     }
     users = service 'users' {  // internal/users/go.mod:1
@@ -194,39 +114,12 @@ model {
   mysql -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
   mysql -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
   mysql -[request]-> users_grpc  // env.USERS_GRPC_ADDR
-  adapters -> query
-  adapters -> domain
-  app -> command
-  app -> query
-  command -> domain
-  query -> domain
-  ports -> app
-  ports -> command
-  ports -> query
-  service_2 -> adapters
-  service_2 -> app
-  service_2 -> command
-  service_2 -> query
-  service_2 -> domain
   trainer -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
   trainer -> mysql  // reads or writes? say which: -[reads]-> or -[writes]->
-  adapters_2 -> query_2
-  adapters_2 -> domain_2
-  app_2 -> command_2
-  app_2 -> query_2
-  command_2 -> domain_2
-  ports_2 -> app_2
-  ports_2 -> command_2
-  ports_2 -> query_2
-  ports_2 -> domain_2
-  service_3 -> adapters_2
-  service_3 -> app_2
-  service_3 -> command_2
-  service_3 -> query_2
   trainings -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
   users -> firestore  // reads or writes? say which: -[reads]-> or -[writes]->
-  src -> repositories
-  repositories -> src
+  common -[request]-> trainer_grpc  // env.TRAINER_GRPC_ADDR
+  common -[request]-> users_grpc  // env.USERS_GRPC_ADDR
 }
 
 specification {
